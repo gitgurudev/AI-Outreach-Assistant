@@ -82,6 +82,24 @@
   letter-spacing: -0.1px !important;
   color: #fff !important;
 }
+#aoa-panel .aoa-mode-tag {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 20px !important;
+  letter-spacing: 0.3px !important;
+  margin-left: auto !important;
+  margin-right: 6px !important;
+}
+#aoa-panel .aoa-mode-real {
+  background: rgba(255,255,255,0.25) !important;
+  color: #fff !important;
+}
+#aoa-panel .aoa-mode-mock {
+  background: rgba(0,0,0,0.15) !important;
+  color: rgba(255,255,255,0.75) !important;
+}
+
 #aoa-panel .aoa-close-btn {
   background: rgba(255, 255, 255, 0.18) !important;
   border: none !important;

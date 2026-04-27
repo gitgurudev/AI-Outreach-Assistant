@@ -76,7 +76,7 @@ async function handleGenerate() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Analyzing…'; }
 
   currentJob = extractJob();
-  renderPanel(currentJob);           // show panel immediately with job data
+  await renderPanel(currentJob);     // show panel immediately with job data
 
   // Fetch email + message in parallel via background service worker
   const [emailRes, msgRes] = await Promise.all([
@@ -99,17 +99,25 @@ async function handleGenerate() {
 }
 
 // ── Build panel HTML ──────────────────────────────────────────────
-function renderPanel(job) {
+async function renderPanel(job) {
   removePanel();
 
   const panel = document.createElement('div');
   panel.id    = PANEL_ID;
+  // Check AI mode from storage to show badge in header
+  const { aiEnabled = false, openaiKey = '' } =
+    await chrome.storage.local.get(['aiEnabled', 'openaiKey']);
+  const usingReal = aiEnabled && !!openaiKey;
+
   panel.innerHTML = `
     <div class="aoa-header">
       <div class="aoa-header-left">
         <span class="aoa-logo">✉</span>
         <span class="aoa-title">AI Outreach Assistant</span>
       </div>
+      <span class="aoa-mode-tag ${usingReal ? 'aoa-mode-real' : 'aoa-mode-mock'}">
+        ${usingReal ? 'GPT-4o' : 'Mock'}
+      </span>
       <button id="aoa-close" class="aoa-close-btn" title="Close">✕</button>
     </div>
 

@@ -15,7 +15,7 @@
       background: #fff;
     }
 
-    /* Header */
+    /* ── Header ── */
     .header {
       background: #0a66c2;
       color: #fff;
@@ -28,18 +28,14 @@
     .header-title { font-size: 15px; font-weight: 700; }
     .header-ver   { font-size: 10px; opacity: 0.7; margin-left: auto; }
 
-    /* Body */
-    .body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    /* ── Body ── */
+    .body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-    /* Status pill */
+    /* ── Status pill ── */
     .status {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 11px 13px;
-      border-radius: 9px;
-      font-size: 13px;
-      font-weight: 500;
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 13px; border-radius: 9px;
+      font-size: 13px; font-weight: 500;
     }
     .status-on  { background: #dcfce7; color: #15803d; }
     .status-off { background: #f5f5f5; color: #6b7280; }
@@ -47,47 +43,111 @@
     .dot-green { background: #22c55e; }
     .dot-gray  { background: #9ca3af; }
 
-    /* Info box */
+    /* ── Job info box ── */
     .info-box {
-      background: #f0f4fa;
-      border-radius: 8px;
-      padding: 11px 13px;
-      font-size: 12px;
-      color: #4b5563;
-      line-height: 1.5;
-      display: none;
+      background: #f0f4fa; border-radius: 8px;
+      padding: 10px 13px; font-size: 12px; color: #4b5563;
+      line-height: 1.5; display: none;
     }
-    .info-box .job-title  { font-weight: 700; color: #1c1e21; margin-bottom: 2px; }
-    .info-box .job-company{ color: #0a66c2; }
+    .info-box .job-title   { font-weight: 700; color: #1c1e21; margin-bottom: 2px; }
+    .info-box .job-company { color: #0a66c2; }
 
-    /* Buttons */
+    /* ── AI Mode badge ── */
+    .ai-badge {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 13px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    }
+    .ai-badge-on  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .ai-badge-off { background: #fafafa; color: #6b7280; border: 1px solid #e5e7eb; }
+    .ai-badge-label { display: flex; align-items: center; gap: 6px; }
+    .ai-badge-tag {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; letter-spacing: 0.3px;
+    }
+    .tag-real { background: #dbeafe; color: #1d4ed8; }
+    .tag-mock { background: #f3f4f6; color: #9ca3af; }
+
+    /* ── Buttons ── */
     .btn {
-      width: 100%;
-      padding: 11px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      width: 100%; padding: 11px; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
       transition: background 0.15s, opacity 0.15s;
     }
     .btn-primary { background: #0a66c2; color: #fff; }
     .btn-primary:hover:not(:disabled) { background: #004182; }
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* Divider */
-    .divider {
-      height: 1px; background: #f0f2f5; margin: 0 -16px;
+    /* ── Settings section ── */
+    .settings-toggle {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: none; border: none; color: #6b7280; font-size: 12px;
+      cursor: pointer; padding: 4px; width: 100%; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .settings-toggle:hover { color: #1c1e21; background: #f5f5f5; }
+    .settings-toggle .arrow { font-size: 10px; transition: transform 0.2s; }
+    .settings-toggle.open .arrow { transform: rotate(180deg); }
+
+    .settings-box {
+      display: none; flex-direction: column; gap: 10px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 14px;
+    }
+    .settings-box.open { display: flex; }
+
+    .settings-label {
+      font-size: 11px; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
 
-    /* Footer */
-    .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      padding: 10px 16px;
+    /* API key input row */
+    .key-row { display: flex; gap: 6px; }
+    .key-input {
+      flex: 1; padding: 8px 10px; border: 1px solid #d1d5db;
+      border-radius: 7px; font-size: 12px; font-family: monospace;
+      outline: none; transition: border-color 0.15s;
+      color: #1c1e21; background: #fff;
     }
-    .footer a { color: #0a66c2; text-decoration: none; }
+    .key-input:focus { border-color: #0a66c2; }
+    .key-input::placeholder { color: #9ca3af; font-family: inherit; }
+    .key-save {
+      padding: 8px 12px; background: #0a66c2; color: #fff;
+      border: none; border-radius: 7px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .key-save:hover { background: #004182; }
+    .key-save.saved { background: #16a34a; }
+
+    /* Toggle switch */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .toggle-row-label { font-size: 13px; color: #374151; font-weight: 500; }
+    .toggle-wrap { position: relative; width: 40px; height: 22px; }
+    .toggle-wrap input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #d1d5db;
+      border-radius: 22px; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle-wrap input:checked + .toggle-track { background: #0a66c2; }
+    .toggle-wrap input:checked + .toggle-track::before { transform: translateX(18px); }
+
+    .key-status {
+      font-size: 11px; color: #6b7280; display: flex;
+      align-items: center; gap: 5px;
+    }
+    .key-status.has-key { color: #15803d; }
+
+    /* ── Dividers ── */
+    .divider { height: 1px; background: #f0f2f5; }
+
+    /* ── Footer ── */
+    .footer { text-align: center; font-size: 11px; color: #9ca3af; padding: 10px 16px; }
   </style>
 </head>
 <body>
@@ -95,26 +155,67 @@
   <div class="header">
     <span class="header-icon">✉</span>
     <span class="header-title">AI Outreach</span>
-    <span class="header-ver">v1.0</span>
+    <span class="header-ver">v1.1</span>
   </div>
 
   <div class="body">
-    <!-- Status indicator -->
+
+    <!-- Page status -->
     <div class="status status-off" id="status">
       <span class="dot dot-gray" id="status-dot"></span>
       <span id="status-text">Checking page…</span>
     </div>
 
-    <!-- Quick job info (shown when on a job page) -->
+    <!-- Detected job info -->
     <div class="info-box" id="info-box">
-      <div class="job-title"  id="info-title">—</div>
+      <div class="job-title"   id="info-title">—</div>
       <div class="job-company" id="info-company">—</div>
     </div>
 
-    <!-- Primary action -->
+    <!-- AI mode badge -->
+    <div class="ai-badge ai-badge-off" id="ai-badge">
+      <div class="ai-badge-label">
+        <span>🤖</span>
+        <span id="ai-badge-text">Message Mode</span>
+      </div>
+      <span class="ai-badge-tag tag-mock" id="ai-badge-tag">MOCK</span>
+    </div>
+
+    <!-- Open panel button -->
     <button class="btn btn-primary" id="open-btn" disabled>
       Open Outreach Panel
     </button>
+
+    <!-- Settings toggle -->
+    <button class="settings-toggle" id="settings-toggle">
+      ⚙ Settings
+      <span class="arrow">▾</span>
+    </button>
+
+    <!-- Settings panel -->
+    <div class="settings-box" id="settings-box">
+
+      <!-- AI toggle -->
+      <div class="settings-label">AI Enhancement</div>
+      <div class="toggle-row">
+        <span class="toggle-row-label">Use OpenAI GPT-4o</span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="ai-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <!-- API key input -->
+      <div class="settings-label" style="margin-top:4px">OpenAI API Key</div>
+      <div class="key-row">
+        <input type="password" id="key-input" class="key-input"
+               placeholder="sk-..." autocomplete="off" />
+        <button class="key-save" id="key-save">Save</button>
+      </div>
+      <div class="key-status" id="key-status">No key saved — using mock AI</div>
+
+    </div>
+
   </div>
 
   <div class="divider"></div>
