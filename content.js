@@ -72,28 +72,30 @@ function injectButton() {
 
 // ── Main handler: extract → show panel → call APIs ───────────────
 async function handleGenerate() {
+  if (!alive()) return;
   const btn = document.getElementById(BTN_ID);
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Analyzing…'; }
 
   currentJob = extractJob();
   await renderPanel(currentJob);     // show panel immediately with job data
 
-  // Fetch email + message in parallel via background service worker
-  const [emailRes, msgRes] = await Promise.all([
-    chrome.runtime.sendMessage({
-      type:          'FIND_EMAIL',
-      recruiterName: currentJob.recruiter,
-      company:       currentJob.company,
-    }),
-    chrome.runtime.sendMessage({
-      type:      'GENERATE_MESSAGE',
-      jobTitle:  currentJob.jobTitle,
-      company:   currentJob.company,
-      recruiter: currentJob.recruiter,
-    }),
-  ]);
-
-  fillPanelResults(emailRes?.email, msgRes?.message);
+  try {
+    // Fetch email + message in parallel via background service worker
+    const [emailRes, msgRes] = await Promise.all([
+      chrome.runtime.sendMessage({
+        type:          'FIND_EMAIL',
+        recruiterName: currentJob.recruiter,
+        company:       currentJob.company,
+      }),
+      chrome.runtime.sendMessage({
+        type:      'GENERATE_MESSAGE',
+        jobTitle:  currentJob.jobTitle,
+        company:   currentJob.company,
+        recruiter: currentJob.recruiter,
+      }),
+    ]);
+    fillPanelResults(emailRes?.email, msgRes?.message);
+  } catch { /* context invalidated mid-flight */ }
 
   if (btn) { btn.disabled = false; btn.innerHTML = '✉&nbsp; Generate Outreach'; }
 }
@@ -105,8 +107,13 @@ async function renderPanel(job) {
   const panel = document.createElement('div');
   panel.id    = PANEL_ID;
   // Check AI mode from storage to show badge in header
-  const { aiEnabled = false, openaiKey = '' } =
-    await chrome.storage.local.get(['aiEnabled', 'openaiKey']);
+  let aiEnabled = false, openaiKey = '';
+  if (alive()) {
+    try {
+      ({ aiEnabled = false, openaiKey = '' } =
+        await chrome.storage.local.get(['aiEnabled', 'openaiKey']));
+    } catch { /* use defaults */ }
+  }
   const usingReal = aiEnabled && !!openaiKey;
 
   panel.innerHTML = `
@@ -241,7 +248,7 @@ function fillPanelResults(email, message) {
 
 // ── Regenerate message ────────────────────────────────────────────
 async function handleRegenerate() {
-  if (!currentJob) return;
+  if (!currentJob || !alive()) return;
 
   const btn   = document.getElementById('aoa-regen');
   const msgEl = document.getElementById('aoa-msg');
@@ -250,19 +257,20 @@ async function handleRegenerate() {
   btn.textContent = '⏳';
   if (msgEl) { msgEl.value = ''; msgEl.disabled = true; }
 
-  const res = await chrome.runtime.sendMessage({
-    type:      'GENERATE_MESSAGE',
-    jobTitle:  currentJob.jobTitle,
-    company:   currentJob.company,
-    recruiter: currentJob.recruiter,
-  });
-
-  if (msgEl && res?.message) {
-    msgEl.value    = res.message;
-    msgEl.disabled = false;
-    autoResize(msgEl);
-    document.getElementById('aoa-copy-msg').disabled = false;
-  }
+  try {
+    const res = await chrome.runtime.sendMessage({
+      type:      'GENERATE_MESSAGE',
+      jobTitle:  currentJob.jobTitle,
+      company:   currentJob.company,
+      recruiter: currentJob.recruiter,
+    });
+    if (msgEl && res?.message) {
+      msgEl.value    = res.message;
+      msgEl.disabled = false;
+      autoResize(msgEl);
+      document.getElementById('aoa-copy-msg').disabled = false;
+    }
+  } catch { /* context invalidated */ }
 
   btn.disabled    = false;
   btn.textContent = '↻ Regenerate';
@@ -339,8 +347,18 @@ function removePanel() {
   document.getElementById(PANEL_ID)?.remove();
 }
 
+// ── Extension context guard ───────────────────────────────────────
+// Returns false when the extension has been reloaded/updated and this
+// injected script's context is no longer valid. Prevents the
+// "Extension context invalidated" uncaught error.
+function alive() {
+  try { return !!chrome.runtime?.id; } catch { return false; }
+}
+
 // ── Listen for messages from popup ───────────────────────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (!alive()) return;
+
   if (msg.type === 'TRIGGER_PANEL') {
     handleGenerate();
     sendResponse({ ok: true });
@@ -356,22 +374,23 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // ── LinkedIn SPA navigation: re-inject on URL change ─────────────
 let _lastUrl = location.href;
-new MutationObserver(() => {
-  if (location.href !== _lastUrl) {
-    _lastUrl = location.href;
-    removePanel();
-    document.getElementById(BTN_ID)?.remove();
-    // Re-check master switch before re-injecting
-    chrome.storage.local.get('extEnabled').then(({ extEnabled = true }) => {
-      if (extEnabled) setTimeout(injectButton, 2000);
-    });
-  }
-}).observe(document.body, { childList: true, subtree: true });
+const _navObserver = new MutationObserver(() => {
+  if (location.href === _lastUrl) return;
+  _lastUrl = location.href;
+  removePanel();
+  document.getElementById(BTN_ID)?.remove();
+
+  if (!alive()) { _navObserver.disconnect(); return; }
+
+  chrome.storage.local.get('extEnabled').then(({ extEnabled = true }) => {
+    if (extEnabled) setTimeout(injectButton, 2000);
+  }).catch(() => {});
+});
+_navObserver.observe(document.body, { childList: true, subtree: true });
 
 // ── Storage watcher — instant react to popup toggle ──────────────
-// Fires in content script whenever chrome.storage.local changes.
-// No message passing needed; works even without page refresh.
 chrome.storage.onChanged.addListener((changes, area) => {
+  if (!alive()) return;
   if (area !== 'local' || !('extEnabled' in changes)) return;
   const enabled = changes.extEnabled.newValue ?? true;
   if (enabled) {
@@ -384,7 +403,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 // ── Boot ──────────────────────────────────────────────────────────
 async function boot() {
-  const { extEnabled = true } = await chrome.storage.local.get('extEnabled');
-  if (extEnabled) setTimeout(injectButton, 1500);
+  if (!alive()) return;
+  try {
+    const { extEnabled = true } = await chrome.storage.local.get('extEnabled');
+    if (extEnabled) setTimeout(injectButton, 1500);
+  } catch { /* context gone before boot finished */ }
 }
 boot();
