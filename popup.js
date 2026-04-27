@@ -31,16 +31,10 @@ const masterSub     = document.getElementById('master-sub');
 // ── Master extension ON/OFF toggle ───────────────────────────────
 extToggle.addEventListener('change', async () => {
   const enabled = extToggle.checked;
+  // Writing to storage triggers chrome.storage.onChanged in content.js —
+  // no separate message passing needed; button hides/shows instantly.
   await chrome.storage.local.set({ extEnabled: enabled });
   applyExtState(enabled);
-
-  // Tell the active tab's content script to show or hide the button
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.url?.includes('linkedin.com/jobs/')) {
-    chrome.tabs.sendMessage(tab.id, {
-      type: 'SET_EXT_ENABLED', enabled,
-    }).catch(() => {});
-  }
 });
 
 function applyExtState(enabled) {

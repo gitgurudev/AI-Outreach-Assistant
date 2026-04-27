@@ -282,17 +282,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ jobTitle: job.jobTitle, company: job.company });
   }
 
-  // Master ON/OFF from popup toggle
-  if (msg.type === 'SET_EXT_ENABLED') {
-    if (msg.enabled) {
-      injectButton();                          // show button
-    } else {
-      document.getElementById(BTN_ID)?.remove();  // hide button
-      removePanel();                           // close panel if open
-    }
-    sendResponse({ ok: true });
-  }
-
   return true;
 });
 
@@ -310,8 +299,21 @@ new MutationObserver(() => {
   }
 }).observe(document.body, { childList: true, subtree: true });
 
+// ── Storage watcher — instant react to popup toggle ──────────────
+// Fires in content script whenever chrome.storage.local changes.
+// No message passing needed; works even without page refresh.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !('extEnabled' in changes)) return;
+  const enabled = changes.extEnabled.newValue ?? true;
+  if (enabled) {
+    injectButton();
+  } else {
+    document.getElementById(BTN_ID)?.remove();
+    removePanel();
+  }
+});
+
 // ── Boot ──────────────────────────────────────────────────────────
-// Check master switch before injecting; default is ON
 async function boot() {
   const { extEnabled = true } = await chrome.storage.local.get('extEnabled');
   if (extEnabled) setTimeout(injectButton, 1500);
