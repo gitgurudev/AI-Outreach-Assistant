@@ -31,6 +31,37 @@
     /* ── Body ── */
     .body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
+    /* ── Master ON/OFF switch ── */
+    .master-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .master-left { display: flex; flex-direction: column; gap: 2px; }
+    .master-title { font-size: 14px; font-weight: 700; color: #1c1e21; }
+    .master-sub   { font-size: 11px; color: #9ca3af; }
+    /* Big toggle */
+    .big-toggle-wrap { position: relative; width: 50px; height: 28px; }
+    .big-toggle-wrap input { opacity: 0; width: 0; height: 0; }
+    .big-toggle-track {
+      position: absolute; inset: 0; background: #d1d5db;
+      border-radius: 28px; cursor: pointer; transition: background 0.2s;
+    }
+    .big-toggle-track::before {
+      content: ''; position: absolute;
+      width: 20px; height: 20px; left: 4px; top: 4px;
+      background: #fff; border-radius: 50%;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .big-toggle-wrap input:checked + .big-toggle-track { background: #0a66c2; }
+    .big-toggle-wrap input:checked + .big-toggle-track::before { transform: translateX(22px); }
+    /* Disabled state when extension is OFF */
+    body.ext-off .status,
+    body.ext-off .info-box,
+    body.ext-off .ai-badge,
+    body.ext-off #open-btn,
+    body.ext-off .settings-toggle { opacity: 0.4; pointer-events: none; }
+
     /* ── Status pill ── */
     .status {
       display: flex; align-items: center; gap: 9px;
@@ -159,6 +190,18 @@
   </div>
 
   <div class="body">
+
+    <!-- ★ Master ON/OFF switch ★ -->
+    <div class="master-row">
+      <div class="master-left">
+        <span class="master-title" id="master-title">Extension OFF</span>
+        <span class="master-sub"  id="master-sub">Button hidden on LinkedIn</span>
+      </div>
+      <label class="big-toggle-wrap">
+        <input type="checkbox" id="ext-toggle" />
+        <span class="big-toggle-track"></span>
+      </label>
+    </div>
 
     <!-- Page status -->
     <div class="status status-off" id="status">

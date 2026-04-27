@@ -18,6 +18,9 @@ const aiToggle      = document.getElementById('ai-toggle');
 const keyInput      = document.getElementById('key-input');
 const keySave       = document.getElementById('key-save');
 const keyStatus     = document.getElementById('key-status');
+const extToggle     = document.getElementById('ext-toggle');
+const masterTitle   = document.getElementById('master-title');
+const masterSub     = document.getElementById('master-sub');
 
 // ── Init: load saved settings + check current tab ─────────────────
 (async () => {
@@ -25,10 +28,35 @@ const keyStatus     = document.getElementById('key-status');
   await checkTab();
 })();
 
+// ── Master extension ON/OFF toggle ───────────────────────────────
+extToggle.addEventListener('change', async () => {
+  const enabled = extToggle.checked;
+  await chrome.storage.local.set({ extEnabled: enabled });
+  applyExtState(enabled);
+
+  // Tell the active tab's content script to show or hide the button
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url?.includes('linkedin.com/jobs/')) {
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'SET_EXT_ENABLED', enabled,
+    }).catch(() => {});
+  }
+});
+
+function applyExtState(enabled) {
+  extToggle.checked   = enabled;
+  masterTitle.textContent = enabled ? 'Extension ON'  : 'Extension OFF';
+  masterSub.textContent   = enabled ? 'Button visible on LinkedIn' : 'Button hidden on LinkedIn';
+  document.body.classList.toggle('ext-off', !enabled);
+}
+
 // ── Load settings from chrome.storage.local ───────────────────────
 async function loadSettings() {
-  const { openaiKey = '', aiEnabled = false } =
-    await chrome.storage.local.get(['openaiKey', 'aiEnabled']);
+  const { openaiKey = '', aiEnabled = false, extEnabled = true } =
+    await chrome.storage.local.get(['openaiKey', 'aiEnabled', 'extEnabled']);
+
+  // Master toggle (default ON)
+  applyExtState(extEnabled);
 
   aiToggle.checked = aiEnabled;
   updateAiBadge(aiEnabled, !!openaiKey);

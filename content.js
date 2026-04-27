@@ -276,11 +276,23 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     handleGenerate();
     sendResponse({ ok: true });
   }
+
   if (msg.type === 'GET_JOB_INFO') {
-    // Return already-extracted job details so popup can preview them
     const job = currentJob || extractJob();
     sendResponse({ jobTitle: job.jobTitle, company: job.company });
   }
+
+  // Master ON/OFF from popup toggle
+  if (msg.type === 'SET_EXT_ENABLED') {
+    if (msg.enabled) {
+      injectButton();                          // show button
+    } else {
+      document.getElementById(BTN_ID)?.remove();  // hide button
+      removePanel();                           // close panel if open
+    }
+    sendResponse({ ok: true });
+  }
+
   return true;
 });
 
@@ -291,11 +303,17 @@ new MutationObserver(() => {
     _lastUrl = location.href;
     removePanel();
     document.getElementById(BTN_ID)?.remove();
-    // Wait for LinkedIn's SPA to render the new job page
-    setTimeout(injectButton, 2000);
+    // Re-check master switch before re-injecting
+    chrome.storage.local.get('extEnabled').then(({ extEnabled = true }) => {
+      if (extEnabled) setTimeout(injectButton, 2000);
+    });
   }
 }).observe(document.body, { childList: true, subtree: true });
 
 // ── Boot ──────────────────────────────────────────────────────────
-// Small delay so LinkedIn's SPA has time to render the job details
-setTimeout(injectButton, 1500);
+// Check master switch before injecting; default is ON
+async function boot() {
+  const { extEnabled = true } = await chrome.storage.local.get('extEnabled');
+  if (extEnabled) setTimeout(injectButton, 1500);
+}
+boot();
