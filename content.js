@@ -162,8 +162,29 @@ async function renderPanel(job) {
           placeholder="Generating personalized message…" disabled></textarea>
         <div class="aoa-row-between">
           <span class="aoa-hint">Edit before sending ✎</span>
-          <button class="aoa-btn-primary" id="aoa-copy-msg" disabled>Copy Message</button>
+          <button class="aoa-btn-sm" id="aoa-copy-msg" disabled>Copy</button>
         </div>
+      </div>
+
+      <!-- Send via -->
+      <div class="aoa-section">
+        <div class="aoa-section-label">Send Email</div>
+        <div class="aoa-send-row">
+          <button class="aoa-send-gmail" id="aoa-send-gmail" disabled>
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+              <path d="M6 12L24 26L42 12" stroke="#EA4335" stroke-width="3" fill="none"/>
+              <rect x="4" y="10" width="40" height="28" rx="3" stroke="#4285F4" stroke-width="3" fill="none"/>
+              <path d="M4 10L24 26L44 10" stroke="#EA4335" stroke-width="3" fill="none"/>
+            </svg>
+            Open in Gmail
+          </button>
+          <button class="aoa-send-mailto" id="aoa-send-mailto" disabled>
+            ✉ Mail App
+          </button>
+        </div>
+        <p class="aoa-note" id="aoa-send-note" style="margin-top:8px">
+          Generate message first to enable sending
+        </p>
       </div>
 
     </div><!-- /.aoa-body -->
@@ -180,6 +201,8 @@ async function renderPanel(job) {
     () => copyEl('aoa-email', 'aoa-copy-email'));
   document.getElementById('aoa-copy-msg').addEventListener('click',
     () => copyEl('aoa-msg', 'aoa-copy-msg', true));
+  document.getElementById('aoa-send-gmail').addEventListener('click', handleSendGmail);
+  document.getElementById('aoa-send-mailto').addEventListener('click', handleSendMailto);
 }
 
 // ── Populate panel with API results ──────────────────────────────
@@ -189,10 +212,13 @@ function fillPanelResults(email, message) {
   const copyEmail  = document.getElementById('aoa-copy-email');
   const copyMsg    = document.getElementById('aoa-copy-msg');
   const regenBtn   = document.getElementById('aoa-regen');
+  const sendGmail  = document.getElementById('aoa-send-gmail');
+  const sendMailto = document.getElementById('aoa-send-mailto');
+  const sendNote   = document.getElementById('aoa-send-note');
 
   if (emailEl && email) {
-    emailEl.textContent  = email;
-    copyEmail.disabled   = false;
+    emailEl.textContent = email;
+    copyEmail.disabled  = false;
   }
 
   if (msgEl && message) {
@@ -201,6 +227,15 @@ function fillPanelResults(email, message) {
     copyMsg.disabled  = false;
     regenBtn.disabled = false;
     autoResize(msgEl);
+  }
+
+  // Enable send buttons only when both email AND message are ready
+  const hasEmail   = email && email.length > 0;
+  const hasMessage = message && message.length > 0;
+  if (hasEmail && hasMessage && sendGmail && sendMailto) {
+    sendGmail.disabled  = false;
+    sendMailto.disabled = false;
+    if (sendNote) sendNote.textContent = 'Review message above before sending';
   }
 }
 
@@ -231,6 +266,40 @@ async function handleRegenerate() {
 
   btn.disabled    = false;
   btn.textContent = '↻ Regenerate';
+}
+
+// ── Build email subject from job data ────────────────────────────
+function buildSubject() {
+  if (!currentJob) return 'Job Application Inquiry';
+  return `Regarding the ${currentJob.jobTitle} role at ${currentJob.company}`;
+}
+
+// ── Send via Gmail compose tab ────────────────────────────────────
+function handleSendGmail() {
+  const email   = document.getElementById('aoa-email')?.textContent?.trim();
+  const message = document.getElementById('aoa-msg')?.value?.trim();
+  if (!email || !message) return;
+
+  const url = 'https://mail.google.com/mail/?view=cm'
+    + '&to='   + encodeURIComponent(email)
+    + '&su='   + encodeURIComponent(buildSubject())
+    + '&body=' + encodeURIComponent(message);
+
+  // Content scripts can't call chrome.tabs.create; route via background
+  chrome.runtime.sendMessage({ type: 'OPEN_TAB', url });
+}
+
+// ── Send via default mail client ──────────────────────────────────
+function handleSendMailto() {
+  const email   = document.getElementById('aoa-email')?.textContent?.trim();
+  const message = document.getElementById('aoa-msg')?.value?.trim();
+  if (!email || !message) return;
+
+  const link = 'mailto:' + encodeURIComponent(email)
+    + '?subject=' + encodeURIComponent(buildSubject())
+    + '&body='    + encodeURIComponent(message);
+
+  window.location.href = link;
 }
 
 // ── Copy helper ───────────────────────────────────────────────────

@@ -17,6 +17,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'OPEN_TAB') {
+    chrome.tabs.create({ url: msg.url });
+    sendResponse({ ok: true });
+    return true;
+  }
+
   if (msg.type === 'GENERATE_MESSAGE') {
     // Async: check storage first, then decide real vs mock
     generateMessage(msg.jobTitle, msg.company, msg.recruiter)
